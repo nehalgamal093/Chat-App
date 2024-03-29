@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
-import generateTokenAndSetCookie from "../utils/generateToken.js";
+// import generateTokenAndSetCookie from "../utils/generateToken.js";
 import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
@@ -26,7 +26,7 @@ export const signup = async (req, res) => {
       profilePic: gender == "male" ? boyProfilePic : girlProfilePic,
     });
     if (newUser) {
-      generateTokenAndSetCookie(newUser._id, res);
+      // generateTokenAndSetCookie(newUser._id, res);
       await newUser.save();
       res.status(201).json({
         _id: newUser._id,
@@ -54,8 +54,8 @@ export const login = async (req, res) => {
     if (!user || !isPasswordCorrect) {
       return res.status(400).json({ error: "Invalid username or password" });
     }
-    generateTokenAndSetCookie(user._id, res);
-    const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+    // generateTokenAndSetCookie(user._id, res);
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
       expiresIn: "300d",
     });
     res.status(200).json({
