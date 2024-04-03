@@ -16,6 +16,7 @@ const __dirname = path.resolve();
 dotenv.config();
 app.use(express.json());
 // app.use(cookieParser());
+process.env.GOOGLE_APPLICATION_CREDENTIALS;
 initializeApp({
   credential: applicationDefault(),
   projectId: process.env.PROJECT_ID,
