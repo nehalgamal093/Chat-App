@@ -28,7 +28,7 @@ app.post("/notification", function (req, res) {
       title: "Notification",
       body: "This is a test notification",
     },
-    token: "token",
+    token: "tokenn",
   };
   getMessaging()
     .send(message)
