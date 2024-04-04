@@ -1,6 +1,7 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
+import { getMessaging } from "firebase-admin/messaging";
 
 export const sendMessage = async (req, res) => {
   try {
@@ -15,6 +16,7 @@ export const sendMessage = async (req, res) => {
         participants: [senderId, receiverId],
       });
     }
+
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -23,12 +25,36 @@ export const sendMessage = async (req, res) => {
     if (newMessage) {
       conversation.messages.push(newMessage._id);
     }
+
+    const notificationMsg = {
+      notification: {
+        title: newMessage.senderId,
+        body: newMessage.message,
+      },
+      token: req.user.fcmToken,
+    };
+    getMessaging()
+      .send(notificationMsg)
+      .then((response) => {
+        res.status(200).json({
+          message: "Successfully sent Message",
+          newMessage,
+          // token: receivedToken,
+        });
+
+        console.log("Successfully sent message");
+      })
+      .catch((error) => {
+        res.status(400);
+        res.send(error);
+        console.log("Error sending message", error);
+      });
     await Promise.all([conversation.save(), newMessage.save()]);
     const receiverSocketId = getReceiverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
-    res.status(201).json(newMessage);
+    // res.status(201).json(newMessage);
   } catch (error) {
     console.log("Error in sendMessage controller:", error.message);
     res.status(500).json({ error: "Internal server error" });

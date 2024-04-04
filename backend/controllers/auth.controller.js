@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 
 export const signup = async (req, res) => {
   try {
-    const { fullName, username, password, confirmPassword, gender } = req.body;
+    const { fullName, username, password, confirmPassword, gender, fcmToken } =
+      req.body;
     if (password !== confirmPassword) {
       return res.status(400).json({ error: "Password don't match" });
     }
@@ -24,6 +25,7 @@ export const signup = async (req, res) => {
       password: hashedPassword,
       gender,
       profilePic: gender == "male" ? boyProfilePic : girlProfilePic,
+      fcmToken,
     });
     if (newUser) {
       // generateTokenAndSetCookie(newUser._id, res);
@@ -33,6 +35,7 @@ export const signup = async (req, res) => {
         fullName: newUser.fullName,
         username: newUser.username,
         profilePic: newUser.profilePic,
+        fcmToken: newUser.fcmToken,
       });
     } else {
       res.status(400).json({ error: "Invalid user data" });
