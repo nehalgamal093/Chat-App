@@ -1,5 +1,6 @@
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
+import User from "../models/user.model.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 import { getMessaging } from "firebase-admin/messaging";
 
@@ -25,10 +26,11 @@ export const sendMessage = async (req, res) => {
     if (newMessage) {
       conversation.messages.push(newMessage._id);
     }
-
+    let user = await User.findOne({ _id: senderId });
+    console.log("User is", `${user.fullName}`);
     const notificationMsg = {
       notification: {
-        title: newMessage.senderId,
+        title: user.fullName,
         body: newMessage.message,
       },
       token: req.user.fcmToken,
@@ -39,6 +41,7 @@ export const sendMessage = async (req, res) => {
         res.status(200).json({
           message: "Successfully sent Message",
           newMessage,
+
           // token: receivedToken,
         });
 
