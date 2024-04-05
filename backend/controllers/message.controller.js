@@ -33,6 +33,7 @@ export const sendMessage = async (req, res) => {
         title: user.fullName,
         body: newMessage.message,
       },
+      data: { senderId: JSON.stringify(newMessage.senderId) },
       token: req.user.fcmToken,
     };
     getMessaging()
