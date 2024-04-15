@@ -29,10 +29,10 @@ export const sendMessage = async (req, res) => {
     let user = await User.findOne({ _id: senderId });
     console.log("User is", `${user.fullName}`);
     const notificationMsg = {
-      // notification: {
-      //   title: user.fullName,
-      //   body: newMessage.message,
-      // },
+      notification: {
+        title: user.fullName,
+        body: newMessage.message,
+      },
       data: {
         senderId: JSON.stringify(newMessage.senderId),
         title: JSON.stringify(user.fullName),
