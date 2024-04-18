@@ -30,8 +30,11 @@ export const sendMessage = async (req, res) => {
     console.log("User is", `${user.fullName}`);
     const notificationMsg = {
       notification: {
-        title: user.fullName,
-        body: newMessage.message,
+        // title: user.fullName,
+        // body: newMessage.message,
+      },
+      android: {
+        priority: "high",
       },
       data: {
         senderId: JSON.stringify(newMessage.senderId),
