@@ -74,6 +74,17 @@ export const login = async (req, res) => {
   }
 };
 
+export const updateUser = async (req, res, next) => {
+  const { id } = req.params;
+
+  let result = await User.findByIdAndUpdate(id, req.body, {
+    new: true,
+  });
+  !result && next(`User not found ${req.originalUrl}`, 404);
+
+  result && res.json({ message: "success", result });
+};
+
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
