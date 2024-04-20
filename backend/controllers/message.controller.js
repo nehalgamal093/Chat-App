@@ -38,6 +38,7 @@ export const sendMessage = async (req, res) => {
       },
       data: {
         senderId: JSON.stringify(newMessage.senderId),
+        senderImage: JSON.stringify(user.profilePic),
         title: JSON.stringify(user.fullName),
         body: JSON.stringify(newMessage.message),
       },
