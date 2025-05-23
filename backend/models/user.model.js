@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/^\S+@\S+\.\S+$/, "Please use a valid email address"],
+    },
     gender: {
       type: String,
       required: true,
@@ -29,6 +35,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
