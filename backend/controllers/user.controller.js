@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-
+import Conversation from "../models/conversation.model.js";
 export const getUsersForSidebar = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
@@ -188,6 +188,96 @@ export const getFriendRequests = async (req, res) => {
     res.status(200).json(user.friendRequests);
   } catch (err) {
     console.error("Error in getFriendRequests:", err.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getChattedUsers = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Find all conversations where the user is a participant
+    const conversations = await Conversation.find({
+      participants: userId,
+    })
+      .populate({
+        path: "participants",
+        select:
+          "-password -email -fcmToken -friends -friendRequests -sentRequests",
+      })
+      .populate({
+        path: "messages",
+        options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last message
+      });
+
+    // Process the conversations to get user details and last message
+    const chattedUsers = conversations.map((conversation) => {
+      // Find the other participant (not the current user)
+      const otherParticipant = conversation.participants.find(
+        (participant) => participant._id.toString() !== userId.toString()
+      );
+
+      return {
+        user: otherParticipant,
+        lastMessage: conversation.messages[0] || null,
+        conversationId: conversation._id,
+      };
+    });
+
+    // Sort by most recent message
+    chattedUsers.sort((a, b) => {
+      if (!a.lastMessage && !b.lastMessage) return 0;
+      if (!a.lastMessage) return 1;
+      if (!b.lastMessage) return -1;
+      return (
+        new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt)
+      );
+    });
+
+    res.status(200).json(chattedUsers);
+  } catch (error) {
+    console.error("Error in getChattedUsers:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+export const getUserProfile = async (req, res) => {
+  try {
+    const loggedInUserId = req.user._id;
+    const userId = req.params.userId;
+
+    // Find the user and populate their friends (without sensitive info)
+    const user = await User.findById(userId)
+      .select("-password -email -fcmToken -friendRequests -sentRequests")
+      .populate("friends", "fullName username profilePic");
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the logged-in user is friends with this user
+    const isFriend = user.friends.some(
+      (friend) => friend._id.toString() === loggedInUserId.toString()
+    );
+
+    // Check if there's a pending friend request
+    const loggedInUser = await User.findById(loggedInUserId);
+    const hasPendingRequest = loggedInUser.sentRequests.includes(user._id);
+    const hasReceivedRequest = loggedInUser.friendRequests.includes(user._id);
+
+    const friendStatus = isFriend
+      ? "friends"
+      : hasPendingRequest
+      ? "request_sent"
+      : hasReceivedRequest
+      ? "request_received"
+      : "not_friends";
+
+    res.status(200).json({
+      ...user.toObject(),
+      friendStatus,
+    });
+  } catch (error) {
+    console.error("Error in getUserProfile:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
