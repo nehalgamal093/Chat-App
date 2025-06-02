@@ -11,6 +11,7 @@ import {
   getFriendRequests,
   getChattedUsers,
   getUserProfile,
+  searchUsers,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -25,4 +26,5 @@ router.post("/decline-request/:senderId", protectRoute, declineFriendRequest);
 router.get("/requests", protectRoute, getFriendRequests);
 router.get("/chatted-users", protectRoute, getChattedUsers);
 router.get("/profile/:userId", protectRoute, getUserProfile);
+router.get("/search", protectRoute, searchUsers);
 export default router;

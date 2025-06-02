@@ -281,3 +281,24 @@ export const getUserProfile = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+export const searchUsers = async (req, res) => {
+  try {
+    const searchTerm = req.query.term;
+
+    if (!searchTerm || searchTerm.trim() === "") {
+      return res.status(400).json({ error: "Search term is required" });
+    }
+
+    const users = await User.find({
+      $or: [
+        { username: { $regex: searchTerm, $options: "i" } },
+        { fullName: { $regex: searchTerm, $options: "i" } },
+      ],
+    }).select("-password -email -fcmToken");
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error in searchUsers:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
