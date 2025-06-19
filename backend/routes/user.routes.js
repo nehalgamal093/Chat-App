@@ -12,6 +12,7 @@ import {
   getChattedUsers,
   getUserProfile,
   searchUsers,
+  getUserFromQR,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -27,4 +28,5 @@ router.get("/requests", protectRoute, getFriendRequests);
 router.get("/chatted-users", protectRoute, getChattedUsers);
 router.get("/profile/:userId", protectRoute, getUserProfile);
 router.get("/search", protectRoute, searchUsers);
+router.get("/qr/:identifier", protectRoute, getUserFromQR);
 export default router;
