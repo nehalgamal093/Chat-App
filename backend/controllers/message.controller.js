@@ -74,19 +74,20 @@ export const getMessages = async (req, res) => {
 
     const totalPages = Math.ceil(totalMessages / limit);
 
-    // Page from end — so if page=1 => skip from the END
-    const reversedPage = totalPages - pageNumber;
-    const skip = Math.max(reversedPage * limit, 0);
+    const skip = (pageNumber - 1) * limit;
 
     const messages = await Message.find({
       _id: { $in: conversation.messages },
     })
-      .sort({ createdAt: 1 }) // Oldest to newest
+      .sort({ createdAt: -1 }) // Newest to oldest
       .skip(skip)
       .limit(limit);
 
+    // Reverse so messages appear oldest → newest
+    const orderedMessages = messages.reverse();
+
     return res.status(200).json({
-      messages,
+      messages: orderedMessages,
       currentPage: pageNumber,
       totalPages,
     });
