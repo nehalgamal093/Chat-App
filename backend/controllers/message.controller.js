@@ -54,17 +54,44 @@ export const sendMessage = async (req, res) => {
 
 export const getMessages = async (req, res) => {
   try {
-    const { id: userToChatId } = req.params;
+    const { id: userToChatId, page } = req.params;
     const senderId = req.user._id;
+
+    const pageNumber = parseInt(page) || 1;
+    const limit = 15;
 
     const conversation = await Conversation.findOne({
       participants: { $all: [senderId, userToChatId] },
-    }).populate("messages");
-    if (!conversation) return res.status(200).json([]);
-    const messages = conversation.messages;
-    res.status(200).json(messages);
+    });
+
+    if (!conversation) {
+      return res.status(200).json({ messages: [], totalPages: 0 });
+    }
+
+    const totalMessages = await Message.countDocuments({
+      _id: { $in: conversation.messages },
+    });
+
+    const totalPages = Math.ceil(totalMessages / limit);
+
+    // Page from end — so if page=1 => skip from the END
+    const reversedPage = totalPages - pageNumber;
+    const skip = Math.max(reversedPage * limit, 0);
+
+    const messages = await Message.find({
+      _id: { $in: conversation.messages },
+    })
+      .sort({ createdAt: 1 }) // Oldest to newest
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      messages,
+      currentPage: pageNumber,
+      totalPages,
+    });
   } catch (error) {
-    console.log("Error in getMessages controller:", error.message);
+    console.error("Error in getMessages controller:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
 };
