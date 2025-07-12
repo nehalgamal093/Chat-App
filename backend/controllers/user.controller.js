@@ -196,34 +196,31 @@ export const getChattedUsers = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Find all conversations where the user is a participant
+    // Step 1: Find conversations where the user is a participant
     const conversations = await Conversation.find({
       participants: userId,
-    })
-      .populate({
-        path: "participants",
-        select:
-          "-password -email -fcmToken -friends -friendRequests -sentRequests",
-      })
-      .populate({
-        path: "messages",
-        options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last message
-      });
-
-    // Process the conversations to get user details and last message
-    const chattedUsers = conversations.map((conversation) => {
-      // Find the other participant (not the current user)
-      const otherParticipant = conversation.participants.find(
-        (participant) => participant._id.toString() !== userId.toString()
-      );
-
-      return {
-        user: otherParticipant,
-        lastMessage: conversation.messages[0] || null,
-        conversationId: conversation._id,
-      };
+    }).populate({
+      path: "participants",
+      select:
+        "-password -email -fcmToken -friends -friendRequests -sentRequests",
     });
 
+    // Step 2: For each conversation, manually get the latest message
+    const chattedUsers = await Promise.all(
+      conversations.map(async (conversation) => {
+        const otherParticipant = conversation.participants.find(
+          (participant) => participant._id.toString() !== userId.toString()
+        );
+
+        return {
+          user: otherParticipant,
+          lastMessage: conversation.messages[0] || null,
+          conversationId: conversation._id,
+        };
+      })
+    );
+
+    // Step 3: Sort by lastMessage.createdAt
     // Sort by most recent message
     chattedUsers.sort((a, b) => {
       if (!a.lastMessage && !b.lastMessage) return 0;
@@ -240,6 +237,7 @@ export const getChattedUsers = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 export const getUserProfile = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
