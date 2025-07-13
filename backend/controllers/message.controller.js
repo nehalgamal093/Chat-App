@@ -84,10 +84,9 @@ export const getMessages = async (req, res) => {
       .limit(limit);
 
     // Reverse so messages appear oldest → newest
-    const orderedMessages = messages.reverse();
 
     return res.status(200).json({
-      messages: orderedMessages,
+      messages: messages,
       currentPage: pageNumber,
       totalPages,
     });
