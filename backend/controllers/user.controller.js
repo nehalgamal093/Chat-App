@@ -235,7 +235,6 @@ export const getChattedUsers = async (req, res) => {
 
     res.status(200).json(chattedUsers);
   } catch (error) {
-    console.error("Error in getChattedUsers:", error.message);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

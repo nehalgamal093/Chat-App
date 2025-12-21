@@ -14,7 +14,7 @@ const messageSchema = new mongoose.Schema(
     },
     message: {
       type: String,
-      
+      default:""
     },
     mediaUrl: { type: String }, // Media file URL
     mediaType: {
