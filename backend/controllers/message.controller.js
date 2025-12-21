@@ -27,7 +27,7 @@ export const sendMessage = async (req, res) => {
       mediaUrl = req.file.path; // Cloudinary file URL
       mediaType = req.file.mimetype.startsWith("video") ? "video" : "image";
     }
-
+     
     const newMessage = new Message({
       senderId,
       receiverId,

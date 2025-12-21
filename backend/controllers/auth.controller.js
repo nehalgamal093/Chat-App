@@ -95,7 +95,14 @@ export const updateUser = async (req, res, next) => {
 
   result && res.json({ message: "success", result });
 };
+export const updateBio = async (req, res, next) => {
+  const { bio } = req.body;
+  let result = await User.findByIdAndUpdate(req.user.id, { bio }, { new: true });
+  console.log('Result ⭕', result);
+  !result && next(`User not found ${req.originalUrl}`, 404);
 
+  result && res.json({ message: "Bio updated" });
+};
 export const logout = (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
@@ -103,5 +110,27 @@ export const logout = (req, res) => {
   } catch (error) {
     console.log("Error in logout controller", error.message);
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const uploadProfilePic = async (req, res) => {
+  try {
+    const { profilePicture } = req.body;
+    let result = await User.findByIdAndUpdate(req.user.id, { profilePicture }, { new: true });
+
+    let mediaUrl = null;
+    let mediaType = "none";
+
+    if (req.file) {
+      mediaUrl = req.file.path; // Cloudinary file URL
+      mediaType = req.file.mimetype.startsWith("image");
+    }
+    console.log("Result is 🛑", mediaUrl, mediaType);
+    !result && next(`User not found ${req.originalUrl}`, 404);
+
+    result && res.json({ message: "Photo uploaded", media: mediaUrl });
+  } catch (error) {
+    console.error("Error uploading:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

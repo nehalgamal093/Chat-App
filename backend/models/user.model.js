@@ -11,6 +11,10 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    bio: {
+      type: String,
+      default:"",
+    },
     password: {
       type: String,
       required: true,
@@ -27,9 +31,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: ["male", "female"],
     },
-    profilePic: {
+    profilePicture: { type: String }, // Media file URL
+    mediaType: {
       type: String,
-      default: "",
+      enum: ["image","none"],
+      default: "none",
     },
     fcmToken: {
       type: String,
