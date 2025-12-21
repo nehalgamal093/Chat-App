@@ -206,7 +206,6 @@ export const getChattedUsers = async (req, res) => {
       })
       .populate({
         path: "messages",
-        options: { sort: { createdAt: -1 }, limit: 1 }, // Get only the last message
       });
 
     // Process the conversations to get user details and last message
@@ -215,10 +214,13 @@ export const getChattedUsers = async (req, res) => {
       const otherParticipant = conversation.participants.find(
         (participant) => participant._id.toString() !== userId.toString()
       );
+      const lastMessage =
+        conversation.messages
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0] || null;
 
       return {
         user: otherParticipant,
-        lastMessage: conversation.messages[0] || null,
+        lastMessage,
         conversationId: conversation._id,
       };
     });
@@ -266,10 +268,10 @@ export const getUserProfile = async (req, res) => {
     const friendStatus = isFriend
       ? "friends"
       : hasPendingRequest
-      ? "request_sent"
-      : hasReceivedRequest
-      ? "request_received"
-      : "not_friends";
+        ? "request_sent"
+        : hasReceivedRequest
+          ? "request_received"
+          : "not_friends";
 
     res.status(200).json({
       ...user.toObject(),
