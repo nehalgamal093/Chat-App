@@ -27,15 +27,13 @@ export const signup = async (req, res) => {
     }
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const boyProfilePic = `https://avatar.iran.liara.run/public/boy?username=${username}`;
-    const girlProfilePic = `https://avatar.iran.liara.run/public/girl?username=${username}`;
     const newUser = new User({
       fullName,
       username,
       email,
       password: hashedPassword,
       gender,
-      profilePic: gender == "male" ? boyProfilePic : girlProfilePic,
+      profilePicture,
       fcmToken,
     });
     if (newUser) {
@@ -45,7 +43,7 @@ export const signup = async (req, res) => {
         fullName: newUser.fullName,
         username: newUser.username,
         email: newUser.email,
-        profilePic: newUser.profilePic,
+        profilePicture: profilePicture,
         fcmToken: newUser.fcmToken,
       });
     } else {
@@ -76,7 +74,7 @@ export const login = async (req, res) => {
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
-      profilePic: user.profilePic,
+      profilePicture: user.profilePicture,
       token: token,
     });
   } catch (error) {

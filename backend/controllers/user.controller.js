@@ -182,7 +182,7 @@ export const getFriendRequests = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate(
       "friendRequests",
-      "fullName username profilePic"
+      "fullName username profilePicture"
     );
 
     res.status(200).json(user.friendRequests);
@@ -249,7 +249,7 @@ export const getUserProfile = async (req, res) => {
     // Find the user and populate their friends (without sensitive info)
     const user = await User.findById(userId)
       .select("-password -email -fcmToken -friendRequests -sentRequests")
-      .populate("friends", "fullName username profilePic");
+      .populate("friends", "fullName username profilePicture");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -272,9 +272,15 @@ export const getUserProfile = async (req, res) => {
         : hasReceivedRequest
           ? "request_received"
           : "not_friends";
+ const userObj = user.toObject();
 
+    // rename + remove old field
+    if (userObj.profilePic) {
+      userObj.profilePicture = userObj.profilePic;
+      delete userObj.profilePic;
+    }
     res.status(200).json({
-      ...user.toObject(),
+      ...userObj,
       friendStatus,
     });
   } catch (error) {
