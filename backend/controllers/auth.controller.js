@@ -113,9 +113,8 @@ export const logout = (req, res) => {
 
 export const uploadProfilePic = async (req, res) => {
   try {
-    const { profilePicture } = req.body;
-    let result = await User.findByIdAndUpdate(req.user.id, { profilePicture }, { new: true });
 
+    const { profilePicture } = req.body;
     let mediaUrl = null;
     let mediaType = "none";
 
@@ -123,10 +122,12 @@ export const uploadProfilePic = async (req, res) => {
       mediaUrl = req.file.path; // Cloudinary file URL
       mediaType = req.file.mimetype.startsWith("image");
     }
-    console.log("Result is 🛑", mediaUrl, mediaType);
+
+    let result = await User.findByIdAndUpdate(req.user.id, { profilePicture: mediaUrl }, { new: true });
+    console.log("Result is 🛑", profilePicture, mediaType);
     !result && next(`User not found ${req.originalUrl}`, 404);
 
-    result && res.json({ message: "Photo uploaded", media: mediaUrl });
+    result && res.json({ message: "Photo uploaded", profilePicture: mediaUrl });
   } catch (error) {
     console.error("Error uploading:", error);
     res.status(500).json({ error: "Internal server error" });

@@ -17,7 +17,7 @@ router.post("/login", login);
 router.put("/update/:id", updateUser);
 router.put("/update-bio",protectRoute, updateBio);
 
-router.post("/update-photo",protectRoute,upload.single("profilePicture"), uploadProfilePic);
+router.put("/update-photo",protectRoute,upload.single("profilePicture"), uploadProfilePic);
 router.post("/logout", logout);
 
 export default router;

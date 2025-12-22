@@ -276,7 +276,6 @@ export const getUserProfile = async (req, res) => {
 
     // rename + remove old field
     if (userObj.profilePic) {
-      userObj.profilePicture = userObj.profilePic;
       delete userObj.profilePic;
     }
     res.status(200).json({
