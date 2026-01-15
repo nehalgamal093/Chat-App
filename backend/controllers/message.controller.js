@@ -24,7 +24,7 @@ export const sendMessage = async (req, res) => {
     let mediaType = "none";
 
     if (req.file) {
-      mediaUrl = req.file.path; // Cloudinary file URL
+      mediaUrl = req.file.path; 
       mediaType = req.file.mimetype.startsWith("video") ? "video" : "image";
     }
      
@@ -44,7 +44,16 @@ export const sendMessage = async (req, res) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
-
+await getMessaging().send({
+  token: receiver.fcmToken,
+  notification: {
+    title: "New message",
+    body: newMessage.mediaType? " Media": newMessage.message
+  },
+  data: {
+    senderId: senderId.toString(),
+  },
+});
     return res.status(201).json({ message: "Message sent", newMessage });
   } catch (error) {
     console.error("Error in sendMessage:", error);
