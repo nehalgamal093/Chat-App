@@ -12,6 +12,7 @@ export const signup = async (req, res) => {
       password,
       confirmPassword,
       gender,
+      profilePicture,
       fcmToken,
     } = req.body;
     if (password !== confirmPassword) {
@@ -43,7 +44,7 @@ export const signup = async (req, res) => {
         fullName: newUser.fullName,
         username: newUser.username,
         email: newUser.email,
-        profilePicture: profilePicture,
+        profilePicture: newUser.profilePicture,
         fcmToken: newUser.fcmToken,
       });
     } else {

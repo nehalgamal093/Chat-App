@@ -28,7 +28,7 @@ app.post("/notification", function (req, res) {
       title: "Notification",
       body: "This is a test notification",
     },
-    token: "tokenn",
+    token: "dG_M1R7dSEu8yZOMzNbCAA:APA91bFc5Br41GLuWNBpml9hY6icNqeDwUZ5CiePrDsdhguf_7IZgmTR2kQQR-2dvM_pY-kioXNkZXlV2-cEhD4NAaRWI58WHKtqQzKEaVpc6Rsg-fm4ri0",
   };
   getMessaging()
     .send(message)

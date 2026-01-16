@@ -31,7 +31,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: ["male", "female"],
     },
-    profilePicture: { type: String ,default:""}, // Media file URL
+    profilePicture: { type: String ,default:""}, 
     mediaType: {
       type: String,
       enum: ["image","none"],
