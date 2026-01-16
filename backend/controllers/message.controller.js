@@ -46,7 +46,7 @@ export const sendMessage = async (req, res) => {
     }
     const receiver = await User.findById(receiverId);
 await getMessaging().send({
-      token: "dG_M1R7dSEu8yZOMzNbCAA:APA91bFc5Br41GLuWNBpml9hY6icNqeDwUZ5CiePrDsdhguf_7IZgmTR2kQQR-2dvM_pY-kioXNkZXlV2-cEhD4NAaRWI58WHKtqQzKEaVpc6Rsg-fm4ri0",
+      token: receiver.fcmToken,
 
   notification: {
     title: "New message",
