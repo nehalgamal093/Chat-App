@@ -42,9 +42,8 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     activeChatUserId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+      type: Boolean,
+      default: false
     },
     isOnline: {
       type: Boolean,

@@ -27,7 +27,6 @@ export const sendMessage = async (req, res) => {
       mediaUrl = req.file.path;
       mediaType = req.file.mimetype.startsWith("video") ? "video" : "image";
     }
-
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -58,10 +57,9 @@ export const sendMessage = async (req, res) => {
         data: {
           senderId: senderId.toString(),
         },
-
-
       });
     }
+
     return res.status(201).json({ message: "Message sent", newMessage });
   } catch (error) {
     console.error("Error in sendMessage:", error);
