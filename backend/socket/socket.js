@@ -6,7 +6,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000","https://chat-app-nehal-gamal.onrender.com"],
+    origin: ["http://localhost:500","https://chat-app-nehal-gamal.onrender.com"],
     method: ["GET", "POST"],
   },
 });
@@ -22,11 +22,22 @@ io.on("connection", (socket) => {
   if (userId != "undefined") userSocketMap[userId] = socket.id;
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  socket.on("disconnect", () => {
+  socket.on("user-online", async (userId) => {
+    await User.findByIdAndUpdate(userId, { isOnline: true });
+    console.log(userId, "is online");
+    io.emit("update-user-status", { userId, isOnline: true });
+  });
+  socket.on("disconnect",async () => {
     console.log("user disconnected", socket.id);
+  const userId = socket.userId;
+    if (userId) {
+      console.log("YEEEES");
+      await User.findByIdAndUpdate(userId, { isOnline: false });
+      io.emit("update-user-status", { userId, isOnline: false });
+      console.log(userId, "went offline");
+    }
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
-
 export { app, io, server };

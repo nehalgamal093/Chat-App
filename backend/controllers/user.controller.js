@@ -194,8 +194,6 @@ export const getFriendRequests = async (req, res) => {
 export const getChattedUsers = async (req, res) => {
   try {
     const userId = req.user._id;
-
-    // Find all conversations where the user is a participant
     const conversations = await Conversation.find({
       participants: userId,
     })
@@ -208,9 +206,7 @@ export const getChattedUsers = async (req, res) => {
         path: "messages",
       });
 
-    // Process the conversations to get user details and last message
     const chattedUsers = conversations.map((conversation) => {
-      // Find the other participant (not the current user)
       const otherParticipant = conversation.participants.find(
         (participant) => participant._id.toString() !== userId.toString()
       );
@@ -224,8 +220,6 @@ export const getChattedUsers = async (req, res) => {
         conversationId: conversation._id,
       };
     });
-
-    // Sort by most recent message
     chattedUsers.sort((a, b) => {
       if (!a.lastMessage && !b.lastMessage) return 0;
       if (!a.lastMessage) return 1;
@@ -245,8 +239,6 @@ export const getUserProfile = async (req, res) => {
   try {
     const loggedInUserId = req.user._id;
     const userId = req.params.userId;
-
-    // Find the user and populate their friends (without sensitive info)
     const user = await User.findById(userId)
       .select("-password -email -fcmToken -friendRequests -sentRequests")
       .populate("friends", "fullName username profilePicture");
@@ -255,12 +247,10 @@ export const getUserProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Check if the logged-in user is friends with this user
     const isFriend = user.friends.some(
       (friend) => friend._id.toString() === loggedInUserId.toString()
     );
 
-    // Check if there's a pending friend request
     const loggedInUser = await User.findById(loggedInUserId);
     const hasPendingRequest = loggedInUser.sentRequests.includes(user._id);
     const hasReceivedRequest = loggedInUser.friendRequests.includes(user._id);
@@ -274,7 +264,6 @@ export const getUserProfile = async (req, res) => {
           : "not_friends";
  const userObj = user.toObject();
 
-    // rename + remove old field
     if (userObj.profilePic) {
       delete userObj.profilePic;
     }
@@ -327,4 +316,17 @@ export const getUserFromQR = async (req, res) => {
   }
 };
 
+export const setActiveChat = async (req, res) => {
+  try {
+    const { userId } = req.body;
 
+    await User.findByIdAndUpdate(req.user._id, {
+      activeChatUserId: userId || null,
+    });
+
+    res.status(200).json({ message: "Active chat updated" });
+  } catch (error) {
+    console.error("setActiveChat error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

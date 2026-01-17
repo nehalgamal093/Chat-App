@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
-      default:"",
+      default: "",
     },
     password: {
       type: String,
@@ -31,15 +31,24 @@ const userSchema = new mongoose.Schema(
       required: true,
       enum: ["male", "female"],
     },
-    profilePicture: { type: String ,default:""}, 
+    profilePicture: { type: String, default: "" },
     mediaType: {
       type: String,
-      enum: ["image","none"],
+      enum: ["image", "none"],
       default: "none",
     },
     fcmToken: {
       type: String,
       required: true,
+    },
+    activeChatUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    isOnline: {
+      type: Boolean,
+      default: false,
     },
     friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],

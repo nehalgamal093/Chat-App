@@ -9,16 +9,12 @@ import connectToMongoDB from "./db/connectToMongoDB.js";
 import { app, server } from "./socket/socket.js";
 import { initializeApp, applicationDefault } from "firebase-admin/app";
 import { getMessaging } from "firebase-admin/messaging";
-import admin from "firebase-admin";
 const PORT = process.env.PORT || 5000;
 const __dirname = path.resolve();
 
 dotenv.config();
 app.use(express.json());
 // app.use(cookieParser());
-
-
-// Read the JSON from the environment variable
 
 process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
@@ -33,7 +29,7 @@ app.post("/notification", function (req, res) {
       title: "Notification",
       body: "This is a test notification",
     },
-    token: "dG_M1R7dSEu8yZOMzNbCAA:APA91bFc5Br41GLuWNBpml9hY6icNqeDwUZ5CiePrDsdhguf_7IZgmTR2kQQR-2dvM_pY-kioXNkZXlV2-cEhD4NAaRWI58WHKtqQzKEaVpc6Rsg-fm4ri0",
+    token: "token",
   };
   getMessaging()
     .send(message)

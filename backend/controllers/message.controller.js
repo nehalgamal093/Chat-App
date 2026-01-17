@@ -24,10 +24,10 @@ export const sendMessage = async (req, res) => {
     let mediaType = "none";
 
     if (req.file) {
-      mediaUrl = req.file.path; 
+      mediaUrl = req.file.path;
       mediaType = req.file.mimetype.startsWith("video") ? "video" : "image";
     }
-     
+
     const newMessage = new Message({
       senderId,
       receiverId,
@@ -45,18 +45,23 @@ export const sendMessage = async (req, res) => {
       io.to(receiverSocketId).emit("newMessage", newMessage);
     }
     const receiver = await User.findById(receiverId);
-await getMessaging().send({
-      token: receiver.fcmToken,
+    const isChatOpen =
+      receiver.activeChatUserId?.toString() === senderId.toString();
 
-  notification: {
-    title: "New message",
-    body:  newMessage.message==""?"Media":newMessage.message
-  },
-  data: {
-    senderId: senderId.toString(),
-  },
-  
-});
+    if (!isChatOpen) {
+      await getMessaging().send({
+        token: receiver.fcmToken,
+        notification: {
+          title: "New message",
+          body: newMessage.message === "" ? "Media" : newMessage.message,
+        },
+        data: {
+          senderId: senderId.toString(),
+        },
+
+
+      });
+    }
     return res.status(201).json({ message: "Message sent", newMessage });
   } catch (error) {
     console.error("Error in sendMessage:", error);
@@ -91,11 +96,9 @@ export const getMessages = async (req, res) => {
     const messages = await Message.find({
       _id: { $in: conversation.messages },
     })
-      .sort({ createdAt: -1 }) // Newest to oldest
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
-
-    // Reverse so messages appear oldest → newest
 
     return res.status(200).json({
       messages: messages,
@@ -106,4 +109,11 @@ export const getMessages = async (req, res) => {
     console.error("Error in getMessages controller:", error.message);
     res.status(500).json({ error: "Internal server error" });
   }
+};
+export const setActiveChat = async (req, res) => {
+  await User.findByIdAndUpdate(req.user._id, {
+    activeChatUserId: req.body.userId,
+  });
+
+  res.sendStatus(200);
 };
