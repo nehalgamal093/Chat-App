@@ -19,25 +19,34 @@ const userSocketMap = {};
 io.on("connection", (socket) => {
   console.log("a user connected", socket.id);
   const userId = socket.handshake.query.userId;
-  if (userId != "undefined") userSocketMap[userId] = socket.id;
+  if (userId &&userId != "undefined"){
+    socket.userId = userId;
+     userSocketMap[userId] = socket.id
+     User.findByIdAndUpdate(userId, { isOnline: true }).then(() => {
+      console.log(userId, "is online");
+    });
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
+  };
 
-  socket.on("user-online", async (userId) => {
-    await User.findByIdAndUpdate(userId, { isOnline: true });
-    console.log(userId, "is online");
-    io.emit("update-user-status", { userId, isOnline: true });
+
+  socket.on("user-online", async (id) => {
+    await User.findByIdAndUpdate(id, { isOnline: true });
+    io.emit("update-user-status", { userId: id, isOnline: true });
   });
-  socket.on("disconnect",async () => {
-    console.log("user disconnected", socket.id);
-  const userId = socket.userId;
-    if (userId) {
-      console.log("YEEEES");
-      await User.findByIdAndUpdate(userId, { isOnline: false });
-      io.emit("update-user-status", { userId, isOnline: false });
-      console.log(userId, "went offline");
+socket.on("disconnect", async () => {
+    console.log("User disconnected", socket.id);
+
+    if (socket.userId) {
+      const id = socket.userId;
+
+      await User.findByIdAndUpdate(id, { isOnline: false });
+      io.emit("update-user-status", { userId: id, isOnline: false });
+
+      delete userSocketMap[id]; // remove from online map
+      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+
+      console.log(id, "went offline");
     }
-    delete userSocketMap[userId];
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
 export { app, io, server };
