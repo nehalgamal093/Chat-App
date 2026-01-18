@@ -16,12 +16,18 @@ const io = new Server(server, {
   },
 });
 
-// userId => Set(socketId)
 const userSocketMap = new Map();
 
 export const getReceiverSocketId = (userId) => {
   const sockets = userSocketMap.get(userId);
   return sockets ? [...sockets][0] : null;
+};
+
+const emitUserStatus = (userId, isOnline) => {
+  io.emit("user-status-changed", {
+    userId,
+    isOnline,
+  });
 };
 
 io.on("connection", async (socket) => {
@@ -33,16 +39,19 @@ io.on("connection", async (socket) => {
   socket.userId = userId;
   if (!userSocketMap.has(userId)) {
     userSocketMap.set(userId, new Set());
+
     await User.findByIdAndUpdate(userId, { isOnline: true });
+
+    emitUserStatus(userId, true);
   }
 
   userSocketMap.get(userId).add(socket.id);
 
   io.emit("getOnlineUsers", [...userSocketMap.keys()]);
 
-
   socket.on("user-online-chat", async () => {
     await User.findByIdAndUpdate(userId, { activeChatUserId: true });
+
     io.emit("update-chat-status", {
       userId,
       activeChatUserId: true,
@@ -51,6 +60,7 @@ io.on("connection", async (socket) => {
 
   socket.on("chat-disconnected", async () => {
     await User.findByIdAndUpdate(userId, { activeChatUserId: false });
+
     io.emit("update-chat-status", {
       userId,
       activeChatUserId: false,
@@ -72,6 +82,9 @@ io.on("connection", async (socket) => {
         isOnline: false,
         activeChatUserId: false,
       });
+
+    
+      emitUserStatus(userId, false);
 
       io.emit("update-chat-status", {
         userId,
