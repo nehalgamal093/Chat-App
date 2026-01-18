@@ -2,61 +2,85 @@ import { Server } from "socket.io";
 import http from "http";
 import express from "express";
 import User from "../models/user.model.js";
+
 const app = express();
 const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:500", "https://chat-app-nehal-gamal.onrender.com"],
-    method: ["GET", "POST"],
+    origin: [
+      "http://localhost:500",
+      "https://chat-app-nehal-gamal.onrender.com",
+    ],
+    methods: ["GET", "POST"],
   },
 });
 
-export const getReceiverSocketId = (receiverId) => {
-  return userSocketMap[receiverId];
+// userId => Set(socketId)
+const userSocketMap = new Map();
+
+export const getReceiverSocketId = (userId) => {
+  const sockets = userSocketMap.get(userId);
+  return sockets ? [...sockets][0] : null;
 };
-const userSocketMap = {};
 
-io.on("connection", (socket) => {
-  console.log("a user connected", socket.id);
+io.on("connection", async (socket) => {
+  console.log("🔌 Connected:", socket.id);
+
   const userId = socket.handshake.query.userId;
-  if (userId && userId != "undefined") {
-    socket.userId = userId;
-    userSocketMap[userId] = socket.id
-    User.findByIdAndUpdate(userId, { isOnline: true }).then(() => {
-      console.log(userId, "is online");
+  if (!userId) return;
+
+  socket.userId = userId;
+  if (!userSocketMap.has(userId)) {
+    userSocketMap.set(userId, new Set());
+    await User.findByIdAndUpdate(userId, { isOnline: true });
+  }
+
+  userSocketMap.get(userId).add(socket.id);
+
+  io.emit("getOnlineUsers", [...userSocketMap.keys()]);
+
+
+  socket.on("user-online-chat", async () => {
+    await User.findByIdAndUpdate(userId, { activeChatUserId: true });
+    io.emit("update-chat-status", {
+      userId,
+      activeChatUserId: true,
     });
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
-  };
+  });
 
+  socket.on("chat-disconnected", async () => {
+    await User.findByIdAndUpdate(userId, { activeChatUserId: false });
+    io.emit("update-chat-status", {
+      userId,
+      activeChatUserId: false,
+    });
+  });
 
-  socket.on("user-online", async (id) => {
-    await User.findByIdAndUpdate(id, { isOnline: true });
-    io.emit("update-user-status", { userId: id, isOnline: true });
-  });
-  socket.on("user-online-chat", async (id) => {
-    console.log("🟢 User entered chat");
-    await User.findByIdAndUpdate(id, { activeChatUserId: true });
-    io.emit("update-chat-status", { userId: id, activeChatUserId: true });
-  });
-  socket.on("chat-disconnected", async (id) => {
-    console.log("🔴 User disconnected chat");
-    await User.findByIdAndUpdate(id, { activeChatUserId: false });
-    io.emit("update-chat-status", { userId: id, activeChatUserId: false });
-  });
   socket.on("disconnect", async () => {
-    console.log("User disconnected", socket.id);
+    console.log("❌ Disconnected:", socket.id);
 
-    if (socket.userId) {
-      const id = socket.userId;
-      console.log("🔴 User disconnected chat from disconnect");
-      await User.findByIdAndUpdate(id, { isOnline: false });
-      io.emit("update-user-status", { userId: id, isOnline: false });
-      io.emit("update-chat-status", { userId: id, activeChatUserId: false });
-      delete userSocketMap[id];
-      io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    const sockets = userSocketMap.get(userId);
+    if (!sockets) return;
 
-      console.log(id, "went offline");
+    sockets.delete(socket.id);
+
+    if (sockets.size === 0) {
+      userSocketMap.delete(userId);
+
+      await User.findByIdAndUpdate(userId, {
+        isOnline: false,
+        activeChatUserId: false,
+      });
+
+      io.emit("update-chat-status", {
+        userId,
+        activeChatUserId: false,
+      });
     }
+
+    io.emit("getOnlineUsers", [...userSocketMap.keys()]);
   });
 });
+
 export { app, io, server };
